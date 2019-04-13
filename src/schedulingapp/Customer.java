@@ -17,7 +17,7 @@ import javafx.util.Callback;
 
 /**
  *
- * @author brandon
+ * @author brandon <bcjames035@gmail.com>
  */
 public class Customer {
     private IntegerProperty id = new SimpleIntegerProperty();

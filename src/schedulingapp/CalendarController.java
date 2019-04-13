@@ -44,11 +44,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import schedulingapp.LogInController;
 
 /**
  * FXML Controller class
  *
- * @author brandon
+ * @author brandon <bcjames035@gmail.com>
  */
 public class CalendarController implements Initializable {
     
@@ -248,7 +249,9 @@ public class CalendarController implements Initializable {
                     + "createDate, "
                     + "createdBy, "
                     + "lastUpdate, "
-                    + "lastUpdateBy) "
+                    + "lastUpdateBy, "
+                    + "type, "
+                    + "userId) "
                 + "VALUES (" + customer
                 + ", '" + title
                 + "', ' "
@@ -258,9 +261,11 @@ public class CalendarController implements Initializable {
                 + "', '" + startTs
                 + "', '" + endTs
                 + "', NOW()"
-                + ", '" + LogInController.un_string
+                + ", '" + LogInController.getUsername()
                 + "', NOW()"
-                + ", '" + LogInController.un_string +"')"; 
+                + ", '" + LogInController.getUsername()
+                + "', ' "
+                + "', " + LogInController.getUserID() + "')"; 
         Statement stmt = DBConnection.conn.createStatement();
         stmt.executeUpdate(sql);
         

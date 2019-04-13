@@ -14,7 +14,7 @@ import javafx.stage.Stage;
 
 /**
  *
- * @author brandon
+ * @author brandon <bcjames035@gmail.com>
  */
 public class SchedulingApp extends Application {
     

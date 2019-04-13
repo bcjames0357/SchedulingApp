@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 /**
  *
- * @author brandon
+ * @author brandon <bcjames035@gmail.com>
  */
 public class DBConnection {
     private static final String DB_NAME = "U05aBh";

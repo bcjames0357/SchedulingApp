@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -33,7 +34,7 @@ import javafx.stage.Stage;
 /**
  * FXML Controller class
  *
- * @author brandon
+ * @author brandon <bcjames035@gmail.com>
  */
 public class CustomerManagementController implements Initializable {
     
@@ -118,9 +119,9 @@ public class CustomerManagementController implements Initializable {
                         + "VALUES ('" + address
                         + "', ' ', '1', '00000', '" + phone 
                         + "', NOW(),"
-                        + "'" + LogInController.un_string 
+                        + "'" + LogInController.getUsername()
                         + "', NOW(),"
-                        + "'" + LogInController.un_string + "')";
+                        + "'" + LogInController.getUsername() + "')";
             Statement stmt = DBConnection.conn.createStatement();
             stmt.executeUpdate(sql);
             sql = "SELECT * FROM address WHERE address LIKE '" 
@@ -135,9 +136,9 @@ public class CustomerManagementController implements Initializable {
                 + "', '" + addressID
                 + "', '1"
                 + "', NOW(),"
-                + "'" + LogInController.un_string 
+                + "'" + LogInController.getUsername() 
                 + "', NOW(),"
-                + "'" + LogInController.un_string + "')";
+                + "'" + LogInController.getUsername() + "')";
             Statement stmt = DBConnection.conn.createStatement();
             stmt.executeUpdate(sql);
         } catch (SQLException e) {
@@ -157,9 +158,12 @@ public class CustomerManagementController implements Initializable {
             String update = "DELETE FROM customer WHERE customerId = " + removeId;
             stmt = DBConnection.conn.createStatement();
             stmt.executeUpdate(update);
+        } catch (SQLIntegrityConstraintViolationException ex) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Customer deletion error!");
+            alert.setContentText("A customer with existing appointments cannot be deleted.");
+            alert.showAndWait();
         } catch (SQLException ex) {
-            System.err.print(ex);
-        } catch (NullPointerException ex) {
             System.err.println(ex);
         }
         populateCustomers();

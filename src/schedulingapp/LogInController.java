@@ -25,15 +25,16 @@ import javafx.stage.Stage;
 /**
  * FXML Controller class
  *
- * @author brandon
+ * @author brandon <bcjames035@gmail.com>
  */
 public class LogInController implements Initializable {
     
     @FXML private TextField username; 
     @FXML private TextField password;
     @FXML private Button searchButton;
-    public static String un_string;
-    private String pw_string;
+    private static String un_string;
+    private static String pw_string;
+    private static Integer userID;
     private final Locale locale = Locale.getDefault();
     private String alertTitle;
     private String alertText;
@@ -54,7 +55,7 @@ public class LogInController implements Initializable {
             System.err.println(e); 
         }
         String sql = 
-                "SELECT userName,password "
+                "SELECT userName, password, userId "
                 + "FROM user "
                 + "WHERE userName = \"" + un_string 
                 + "\" AND password = \"" + pw_string + "\"";
@@ -101,5 +102,13 @@ public class LogInController implements Initializable {
     
     public void detectLocale() {
         
+    }
+    
+    public static String getUsername(){
+        return un_string;
+    }
+    
+    public static Integer getUserID() {
+        return userID;
     }
 }
