@@ -103,7 +103,6 @@ public class CustomerManagementController implements Initializable {
             address = addressField.getText();
             phone = phoneField.getText();
             
-            
             /* Check if an existing address entity matches the provided address
             *  and phone number. Note that address and phone number are inseperable
             *  due to the database structure. 
@@ -117,7 +116,8 @@ public class CustomerManagementController implements Initializable {
             sql = "INSERT INTO address (address, address2, cityId, postalCode, phone, "
                         + "createDate, createdBy,lastUpdate, lastUpdateBy) "
                         + "VALUES ('" + address
-                        + "', ' ', '1', '00000', '" + phone 
+                        + "', ' ', (SELECT cityId FROM city WHERE cityId = '1')"
+                        + ", '00000', '" + phone 
                         + "', NOW(),"
                         + "'" + LogInController.getUsername()
                         + "', NOW(),"
@@ -133,8 +133,8 @@ public class CustomerManagementController implements Initializable {
             sql = "INSERT INTO customer (customerName, addressId, active, createDate, createdBy,"
                 + "lastUpdate, lastUpdateBy) VALUES ('" 
                 + name
-                + "', '" + addressID
-                + "', '1"
+                + "', (SELECT addressId FROM address WHERE addressId = '" + addressID 
+                + "'), '1"
                 + "', NOW(),"
                 + "'" + LogInController.getUsername() 
                 + "', NOW(),"
@@ -152,11 +152,11 @@ public class CustomerManagementController implements Initializable {
         if(customerTableView.getSelectionModel().isEmpty()){
             return;
         }
-        Statement stmt = null;
+        
         try {
             Integer removeId = customerTableView.getSelectionModel().getSelectedItem().getID();
             String update = "DELETE FROM customer WHERE customerId = " + removeId;
-            stmt = DBConnection.conn.createStatement();
+            Statement stmt = DBConnection.conn.createStatement();
             stmt.executeUpdate(update);
         } catch (SQLIntegrityConstraintViolationException ex) {
             Alert alert = new Alert(Alert.AlertType.WARNING);

@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -20,7 +21,7 @@
       <TableView fx:id="calendarTableView" layoutX="15.0" layoutY="68.0" prefHeight="363.0" prefWidth="756.0">
         <columns>
             <TableColumn fx:id="idCol" prefWidth="60.0" text="ID" />
-          <TableColumn fx:id="titleCol" prefWidth="141.0" text="Title" />
+          <TableColumn fx:id="titleCol" prefWidth="141.0" text="Type" />
           <TableColumn fx:id="locationCol" prefWidth="136.0" text="Location" />
             <TableColumn fx:id="dateCol" prefWidth="137.0" text="Date" />
             <TableColumn fx:id="startCol" prefWidth="98.0" text="Start Time" />
@@ -34,15 +35,17 @@
       <TextField fx:id="startField" layoutX="219.0" layoutY="452.0" promptText="Start time" />
       <TextField fx:id="durationField" layoutX="219.0" layoutY="488.0" promptText="Duration (HH:MM)" />
       <TextField fx:id="customerField" layoutX="219.0" layoutY="524.0" promptText="Customer ID" />
-      <TextField fx:id="titleField" layoutX="15.0" layoutY="452.0" prefHeight="26.0" prefWidth="198.0" promptText="Appointment title" />
+      <TextField fx:id="titleField" layoutX="15.0" layoutY="452.0" prefHeight="26.0" prefWidth="198.0" promptText="Appointment type" />
       <TextField fx:id="locationField" layoutX="15.0" layoutY="488.0" prefHeight="26.0" prefWidth="198.0" promptText="Location" />
       <Button layoutX="74.0" layoutY="560.0" mnemonicParsing="false" onAction="#addButtonPushed" text="Add New Appointment" />
-      <VBox layoutX="621.0" layoutY="478.0" prefHeight="109.0" prefWidth="150.0" spacing="15.0">
+      <VBox layoutX="621.0" layoutY="458.0" prefHeight="109.0" prefWidth="150.0" spacing="15.0">
          <children>
-            <Button mnemonicParsing="false" onAction="#weekButtonPushed" prefWidth="150.0" text="View by Week" />
-            <Button mnemonicParsing="false" onAction="#monthButtonPushed" prefWidth="150.0" text="View by Month" />
+            <RadioButton fx:id="allRB" mnemonicParsing="false" onAction="#allRadioButtonSelected" text="View All" />
+            <RadioButton fx:id="weekRB" mnemonicParsing="false" onAction="#weekRadioButtonSelected" text="View Next Week" />
+            <RadioButton fx:id="monthRB" mnemonicParsing="false" onAction="#monthRadioButtonSelected" text="View Next Month" />
             <Button mnemonicParsing="false" onAction="#viewCustomerButtonPushed" prefHeight="26.0" prefWidth="150.0" text="View Customer" />
          </children>
       </VBox>
+      <Button layoutX="499.0" layoutY="557.0" mnemonicParsing="false" onAction="#reportsButtonPushed" text="View Reports" />
    </children>
 </AnchorPane>

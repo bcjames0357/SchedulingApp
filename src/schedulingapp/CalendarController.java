@@ -7,25 +7,24 @@ package schedulingapp;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.time.Duration;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZonedDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Observable;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -37,13 +36,13 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import schedulingapp.LogInController;
 
 /**
@@ -69,25 +68,39 @@ public class CalendarController implements Initializable {
     @FXML private TextField customerField;
     @FXML private DatePicker datePicker;
     
+    @FXML private RadioButton allRB;
+    @FXML private RadioButton weekRB;
+    @FXML private RadioButton monthRB;
+    
+    private ToggleGroup toggleGroup;
+    
     private final ObservableList<Appointment> appointments = FXCollections.observableArrayList(Appointment.extractor()); 
     
     private Integer id; 
     private String title;
     private String location;
     private LocalTime start;
-    private Integer duration;
+    private int duration;
     private LocalTime end;
     private LocalDateTime startLDT;
     private LocalDateTime endLDT;
-    private ZonedDateTime startUTC;
-    private ZonedDateTime endUTC;
     private Timestamp startTs;
     private Timestamp endTs;
     private Integer customer;
     private LocalDate date;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-
+    private Integer offset = (((TimeZone.getDefault().getRawOffset())/1000)/60/60); // Convers miliseconds to seconds, then minutes, then hours
+    
+    private ArrayList<LocalDate> dateArray = new ArrayList<LocalDate>();
+    private ArrayList<LocalTime> startArray = new ArrayList<LocalTime>();
+    private ArrayList<LocalTime> endArray = new ArrayList<LocalTime>();
+    private ArrayList<Integer> idArray = new ArrayList<Integer>();
+    
+    private LocalTime openT;
+    private LocalDateTime open;
+    private LocalDateTime close;
+    
     public CalendarController() {
         
     }
@@ -97,6 +110,14 @@ public class CalendarController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
+        toggleGroup = new ToggleGroup();
+        allRB.setToggleGroup(toggleGroup);
+        weekRB.setToggleGroup(toggleGroup);
+        monthRB.setToggleGroup(toggleGroup);
+        
+        toggleGroup.selectToggle(allRB);
+        
         populateCalendar();
     }
     
@@ -104,6 +125,21 @@ public class CalendarController implements Initializable {
      *
      * @param event
      */
+    
+    public void reportsButtonPushed(ActionEvent event)
+    {
+        try{
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(SchedulingApp.class.getResource("Reports.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+    }
     public void saveButtonPushed(ActionEvent event)
     {
 
@@ -114,7 +150,7 @@ public class CalendarController implements Initializable {
         */
         if(calendarTableView.getSelectionModel().isEmpty()){
             Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Customer Update Error");
+            alert.setTitle("Appointment Update Error");
             alert.setContentText("Please select an appointment to update.");
             alert.showAndWait();
             return;
@@ -129,22 +165,30 @@ public class CalendarController implements Initializable {
         if(startField.getText() == null || startField.getText().trim().isEmpty()) {
             start = calendarTableView.getSelectionModel().getSelectedItem().getStart();
         } else {
-            System.out.println(startField.getText());
             start = LocalTime.parse(startField.getText(), timeFormatter);
         }
         if(durationField.getText() == null || durationField.getText().trim().isEmpty()) {
+            if(!(startField.getText() == null || startField.getText().trim().isEmpty()))
+            {
+                start = calendarTableView.getSelectionModel().getSelectedItem().getStart();
+                end = calendarTableView.getSelectionModel().getSelectedItem().getEnd();
+                duration = (int) ChronoUnit.HOURS.between(start, end);
+                start = LocalTime.parse(startField.getText(), timeFormatter);
+                endLDT = LocalDateTime.of(date, start).plus(duration, ChronoUnit.HOURS).plus(-offset, ChronoUnit.HOURS);
+            } else {
             end = calendarTableView.getSelectionModel().getSelectedItem().getEnd();
+            endLDT = LocalDateTime.of(date, end).plus(-offset, ChronoUnit.HOURS);
+            }
         } else {
             duration = Integer.parseInt(durationField.getText());
-            end = start.plus(duration, ChronoUnit.HOURS);
+            endLDT = LocalDateTime.of(date, start).plus(duration, ChronoUnit.HOURS).plus(-offset,ChronoUnit.HOURS);
         }
 
-        startLDT = LocalDateTime.of(date, start);
-        endLDT = LocalDateTime.of(date, end);
+        startLDT = LocalDateTime.of(date, start).plus(-offset,ChronoUnit.HOURS);
 
         startTs = Timestamp.valueOf(startLDT); //this value can be inserted into database
         endTs = Timestamp.valueOf(endLDT); //this value can be inserted into database        
-
+        
         if(titleField.getText() == null || titleField.getText().trim().isEmpty()) {
             title = calendarTableView.getSelectionModel().getSelectedItem().getTitle();
         } else {
@@ -169,25 +213,17 @@ public class CalendarController implements Initializable {
                 + "', end = '" + endTs
                 + "', customerId = '" + customer
                 + "' WHERE appointmentId = '" + id + "'";
-        
-        try {
-        Statement stmt = DBConnection.conn.createStatement();
-        stmt.executeUpdate(sql);
-        } catch (SQLException ex) {
-            Logger.getLogger(CalendarController.class.getName()).log(Level.SEVERE, null, ex);
+        if(noOverlap(id) && inBusinessHours())
+        {
+            try {
+            Statement stmt = DBConnection.conn.createStatement();
+            stmt.executeUpdate(sql);
+            } catch (SQLException ex) {
+                Logger.getLogger(CalendarController.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-        
+    
         populateCalendar();
-    }
-    
-    public void weekButtonPushed(ActionEvent event)
-    {
-        
-    }
-    
-    public void monthButtonPushed(ActionEvent event)
-    {
-        
     }
 
     public void deleteButtonPushed(ActionEvent event)
@@ -215,8 +251,8 @@ public class CalendarController implements Initializable {
             duration = Integer.parseInt(durationField.getText());
             end = start.plus(duration, ChronoUnit.HOURS);
             
-            startLDT = LocalDateTime.of(date, start);
-            endLDT = LocalDateTime.of(date, end);
+            startLDT = LocalDateTime.of(date, start).plus(-offset,ChronoUnit.HOURS);
+            endLDT = LocalDateTime.of(date, end).plus(-offset,ChronoUnit.HOURS);
             
             
             startTs = Timestamp.valueOf(startLDT); //this value can be inserted into database
@@ -226,52 +262,51 @@ public class CalendarController implements Initializable {
             location = locationField.getText();
             
             
-            customer = Integer.parseInt(customerField.getText());
-            date = datePicker.getValue();
+            customer = Integer.parseInt(customerField.getText());            
             
-            
-        } catch (Exception e) {
+            if(noOverlap() && inBusinessHours())
+            {
+                String sql = 
+                        "INSERT INTO appointment ("
+                        + "customerId, "
+                        + "title, "
+                        + "description, "
+                        + "location, "
+                        + "contact, "
+                        + "url, "
+                        + "start, "
+                        + "end, "
+                        + "createDate, "
+                        + "createdBy, "
+                        + "lastUpdate, "
+                        + "lastUpdateBy, "
+                        + "type, "
+                        + "userId) "
+                        + "VALUES ('" + customer
+                        + "', '" + title
+                        + "', ' "
+                        + "', '" + location
+                        + "', ' "
+                        + "', ' "
+                        + "', '" + startTs
+                        + "', '" + endTs
+                        + "', NOW()"
+                        + ", '" + LogInController.getUsername()
+                        + "', NOW()"
+                        + ", '" + LogInController.getUsername()
+                        + "', ' "
+                        + "', '" + LogInController.getUserID() + "')";
+            Statement stmt = DBConnection.conn.createStatement();
+            stmt.executeUpdate(sql);
+            }
+
+        } catch (SQLException ex) {
+            System.err.print(ex);
+        } catch (NullPointerException e) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Appointment Creation Error");
             alert.setContentText("Please enter a value for all fields.");
             alert.showAndWait();
-        }
-        
-        try {
-            String sql = "INSERT INTO appointment (customerId, "
-                    + "title, "
-                    + "description, "
-                    + "location, "
-                    + "contact, "
-                    + "url, "
-                    + "start, "
-                    + "end, "
-                    + "createDate, "
-                    + "createdBy, "
-                    + "lastUpdate, "
-                    + "lastUpdateBy, "
-                    + "type, "
-                    + "userId) "
-                + "VALUES (" + customer
-                + ", '" + title
-                + "', ' "
-                + "', '" + location
-                + "', ' "
-                + "', ' "
-                + "', '" + startTs
-                + "', '" + endTs
-                + "', NOW()"
-                + ", '" + LogInController.getUsername()
-                + "', NOW()"
-                + ", '" + LogInController.getUsername()
-                + "', ' "
-                + "', " + LogInController.getUserID() + "')"; 
-        Statement stmt = DBConnection.conn.createStatement();
-        stmt.executeUpdate(sql);
-        
-        
-        } catch (SQLException ex) {
-            System.err.print(ex);
         }
         populateCalendar();
     }
@@ -298,23 +333,111 @@ public class CalendarController implements Initializable {
         }
     }
     
+    public void allRadioButtonSelected() {
+        populateCalendar();
+    }
+    
+    public void weekRadioButtonSelected() {
+        populateCalendar(7);
+    }
+    
+    public void monthRadioButtonSelected() {
+        populateCalendar(30);
+    }
+    
     public void populateCalendar() {
         calendarTableView.getItems().clear();
+        dateArray.clear();
+        startArray.clear();
+        endArray.clear();
+        idArray.clear();
+        
         try {
             String sql = "SELECT appointmentId, title, location, start, end, customerId FROM appointment";
             ResultSet rs = DBConnection.conn.createStatement().executeQuery(sql);
             
             while(rs.next()){
                 Appointment appt = new Appointment();
+                LocalDateTime ldtStart = LocalDateTime.parse(rs.getString("start"), formatter).plus(offset, ChronoUnit.HOURS);
+                date = ldtStart.toLocalDate();
+                LocalTime ltStart= (LocalDateTime.parse(rs.getString("start"), formatter).toLocalTime()).plus(offset, ChronoUnit.HOURS);
+                LocalTime ltEnd = (LocalDateTime.parse(rs.getString("end"), formatter).toLocalTime()).plus(offset, ChronoUnit.HOURS);
+                
                 appt.setID(rs.getInt("appointmentId"));
                 appt.setTitle(rs.getString("title"));
                 appt.setLocation(rs.getString("location"));
-                appt.setDate(LocalDateTime.parse(rs.getString("start"), formatter).toLocalDate());
-                appt.setStart(LocalDateTime.parse(rs.getString("start"), formatter).toLocalTime());
-                appt.setEnd(LocalDateTime.parse(rs.getString("end"), formatter).toLocalTime());
+                appt.setDate(date);
+                appt.setStart(ltStart);
+                appt.setEnd(ltEnd);
                 appt.setCustomer(rs.getInt("customerId"));
                 
+                dateArray.add(date);
+                startArray.add(ltStart);
+                endArray.add(ltEnd);
+                idArray.add(appt.getID());
+                
                 appointments.add(appt);
+            }
+            calendarTableView.setItems(appointments);
+        } catch (SQLException ex) {
+            System.err.print(ex);
+        }
+     
+        // This lambda expression was used to improve the readability of the code
+        // as well as to decrease overall .JAR file size by avoiding additional 
+        // .CLASS files from inner classes.
+        idCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getID()).asObject());
+
+        // This lambda expression was used to improve the readability of the code
+        // as well as to decrease overall .JAR file size by avoiding additional 
+        // .CLASS files from inner classes.
+        titleCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getTitle()));
+        locationCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLocation()));
+        dateCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalDate>("date"));
+        startCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalTime>("start"));
+        endCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalTime>("end"));
+        customerCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getCustomer()).asObject());
+    
+    }
+    
+    public void populateCalendar(int days) {
+        calendarTableView.getItems().clear();
+        dateArray.clear();
+        startArray.clear();
+        endArray.clear();
+        idArray.clear();
+        
+        try {
+            String sql = "SELECT appointmentId, title, location, start, end, customerId FROM appointment";
+            ResultSet rs = DBConnection.conn.createStatement().executeQuery(sql);
+            LocalDate now = LocalDate.now();
+            LocalDate date;
+            LocalDate cutoff = now.plus(days, ChronoUnit.DAYS);
+            
+            while(rs.next()){
+                Appointment appt = new Appointment();
+                LocalDateTime ldtStart = LocalDateTime.parse(rs.getString("start"), formatter).plus(offset, ChronoUnit.HOURS);
+                date = ldtStart.toLocalDate();
+                LocalTime ltStart= (LocalDateTime.parse(rs.getString("start"), formatter).toLocalTime()).plus(offset, ChronoUnit.HOURS);;
+                LocalTime ltEnd = (LocalDateTime.parse(rs.getString("end"), formatter).toLocalTime()).plus(offset, ChronoUnit.HOURS);
+                
+                appt.setID(rs.getInt("appointmentId"));
+                appt.setTitle(rs.getString("title"));
+                appt.setLocation(rs.getString("location"));
+                appt.setDate(date);
+                appt.setStart(ltStart);
+                appt.setEnd(ltEnd);
+                appt.setCustomer(rs.getInt("customerId"));
+                
+                dateArray.add(date);
+                startArray.add(ltStart);
+                endArray.add(ltEnd);
+                idArray.add(appt.getID());
+                
+                if(date.isAfter(now) && date.isBefore(cutoff)) 
+                {    
+                    appointments.add(appt);
+                }
             }
             calendarTableView.setItems(appointments);
         } catch (SQLException ex) {
@@ -328,7 +451,68 @@ public class CalendarController implements Initializable {
         startCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalTime>("start"));
         endCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalTime>("end"));
         customerCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getCustomer()).asObject());
+        
+    }
+    
+    public boolean noOverlap(Integer id) {
+        for(int i = 0; i < appointments.size(); i++) {
+            if(id.equals(idArray.get(i))) // Returns true (no overlap, okay to proceed)
+            {                             // if comparing an appointment to itself
+             return true;
+            } else {
+                if(date.equals(dateArray.get(i)))
+                {
+                    if((start.isAfter(startArray.get(i)) && start.isBefore(endArray.get(i)))
+                            || (end.isAfter(startArray.get(i)) && end.isBefore(endArray.get(i)))
+                            || start.equals(startArray.get(i)) || end.equals(endArray.get(i)))
+                        {
+                            Alert alert = new Alert(Alert.AlertType.WARNING);
+                            alert.setTitle("Appointment Creation Error");
+                            alert.setContentText("An existing appointment conflics with this time.");
+                            alert.showAndWait();
+                            return false;
+                        }
+                }
+            }
+        }
+        return true;
+    }
+    
+    public boolean noOverlap() {
+        for(int i = 0; i < appointments.size(); i++) {
+            if(date.equals(dateArray.get(i)))
+            {
+                if((start.isAfter(startArray.get(i)) && start.isBefore(endArray.get(i)))
+                        || (end.isAfter(startArray.get(i)) && end.isBefore(endArray.get(i)))
+                        || start.equals(startArray.get(i)) || end.equals(endArray.get(i)))
+                    {
+                        Alert alert = new Alert(Alert.AlertType.WARNING);
+                        alert.setTitle("Appointment Creation Error");
+                        alert.setContentText("An existing appointment conflics with this time.");
+                        alert.showAndWait();
+                        return false;
+                    }
+            }
+        }
+        return true;
+    }
+    
+    public boolean inBusinessHours() {
+        openT = LocalTime.parse("08:00", timeFormatter).plus(-offset,ChronoUnit.HOURS);
+        open = LocalDateTime.of(date, openT);
+        close = LocalDateTime.of(date, openT).plus(10, ChronoUnit.HOURS);
+        
+        if(date.getDayOfWeek().equals(DayOfWeek.SATURDAY) 
+                || date.getDayOfWeek().equals(DayOfWeek.SUNDAY)
+                || startLDT.isBefore(open)
+                || endLDT.isAfter(close))
+        {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Appointment Update Error");
+            alert.setContentText("Please select a date and time during normal business hours.");
+            alert.showAndWait();
+            return false;
+        }
+        return true;
     }
 }
-    
-
