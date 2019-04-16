@@ -33,7 +33,7 @@
       <Button layoutX="15.0" layoutY="560.0" mnemonicParsing="false" onAction="#saveButtonPushed" text="Save" />
       <DatePicker fx:id="datePicker" layoutX="15.0" layoutY="524.0" />
       <TextField fx:id="startField" layoutX="219.0" layoutY="452.0" promptText="Start time" />
-      <TextField fx:id="durationField" layoutX="219.0" layoutY="488.0" promptText="Duration (HH:MM)" />
+      <TextField fx:id="durationField" layoutX="219.0" layoutY="488.0" promptText="Duration (hours)" />
       <TextField fx:id="customerField" layoutX="219.0" layoutY="524.0" promptText="Customer ID" />
       <TextField fx:id="titleField" layoutX="15.0" layoutY="452.0" prefHeight="26.0" prefWidth="198.0" promptText="Appointment type" />
       <TextField fx:id="locationField" layoutX="15.0" layoutY="488.0" prefHeight="26.0" prefWidth="198.0" promptText="Location" />

@@ -61,8 +61,6 @@ public class LogInController implements Initializable {
             un_string = username.getText();
             pw_string = password.getText();
             if(username.getText().trim().isEmpty() || password.getText().trim().isEmpty()) {
-                alertTitle = "Login error";
-                alertText = "Please enter a username and password.";
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle(alertTitle);
                 alert.setContentText(alertText);
@@ -98,8 +96,6 @@ public class LogInController implements Initializable {
                 stage.show();
                 
             } else {
-                alertTitle = "Login error";
-                alertText = "Invalid username or password.";
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle(alertTitle);
                 alert.setContentText(alertText);
@@ -123,6 +119,9 @@ public class LogInController implements Initializable {
             password.setPromptText("Passwort");
             alertTitle = "Login Fehler";
             alertText = "Ungültige Login-Referenzen";
+        } else {
+            alertTitle = "Login Error";
+            alertText = "Please enter a valid username and password.";
         }
     }
     

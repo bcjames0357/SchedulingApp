@@ -103,6 +103,14 @@ public class CustomerManagementController implements Initializable {
             address = addressField.getText();
             phone = phoneField.getText();
             
+            if(!validatePhoneNumber(phone))
+            {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Data Entry Error");
+                alert.setContentText("Please enter a valid phone number.");
+                alert.showAndWait();
+                return;
+            }
             /* Check if an existing address entity matches the provided address
             *  and phone number. Note that address and phone number are inseperable
             *  due to the database structure. 
@@ -199,6 +207,14 @@ public class CustomerManagementController implements Initializable {
             phone = customerTableView.getSelectionModel().getSelectedItem().getPhone();
         } else {
             phone = phoneField.getText();
+            if(!validatePhoneNumber(phone))
+            {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Data Entry Error");
+                alert.setContentText("Please enter a valid phone number.");
+                alert.showAndWait();
+                return;
+            }
         }
 
         String sqlCust = "UPDATE customer "
@@ -222,6 +238,18 @@ public class CustomerManagementController implements Initializable {
             populateCustomers(viewID);
         }
         
+    }
+    
+    private static boolean validatePhoneNumber(String phoneNo) 
+    {
+        //validate phone numbers of format "1234567890"
+        if (phoneNo.matches("\\d{10}")) return true;
+        //validating phone number with -, . or spaces
+        else if(phoneNo.matches("\\d{3}[-\\.\\s]\\d{3}[-\\.\\s]\\d{4}")) return true;
+        //validating phone number where area code is in braces ()
+        else if(phoneNo.matches("\\(\\d{3}\\)[-\\.\\s]?\\d{3}[-\\.\\s]?\\d{4}")) return true;
+        //return false if nothing matches the input
+        else return false;
     }
     
     public void returnToCalendarButtonPushed(ActionEvent event) {

@@ -165,7 +165,17 @@ public class CalendarController implements Initializable {
         if(startField.getText() == null || startField.getText().trim().isEmpty()) {
             start = calendarTableView.getSelectionModel().getSelectedItem().getStart();
         } else {
-            start = LocalTime.parse(startField.getText(), timeFormatter);
+            if(startField.getText().matches("(([0-1][0-9]):([0-5][0-9]))|(([2][0-3]):([0-5][0-9]))")){
+                start = LocalTime.parse(startField.getText(), timeFormatter);
+            } else if(startField.getText().matches("(([0-9]):([0-5][0-9]))")){
+                start = LocalTime.parse(("0" + startField.getText()), timeFormatter);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Data Entry Error");
+                alert.setContentText("Please enter a time in 24 hour format of HH:MM.");
+                alert.showAndWait();
+                return;
+            }
         }
         if(durationField.getText() == null || durationField.getText().trim().isEmpty()) {
             if(!(startField.getText() == null || startField.getText().trim().isEmpty()))
@@ -173,14 +183,32 @@ public class CalendarController implements Initializable {
                 start = calendarTableView.getSelectionModel().getSelectedItem().getStart();
                 end = calendarTableView.getSelectionModel().getSelectedItem().getEnd();
                 duration = (int) ChronoUnit.HOURS.between(start, end);
-                start = LocalTime.parse(startField.getText(), timeFormatter);
+                if(startField.getText().matches("(([0-1][0-9]):([0-5][0-9]))|(([2][0-3]):([0-5][0-9]))")){
+                    start = LocalTime.parse(startField.getText(), timeFormatter);
+                } else if(startField.getText().matches("(([0-9]):([0-5][0-9]))")){
+                    start = LocalTime.parse(("0" + startField.getText()), timeFormatter);
+                } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Data Entry Error");
+                alert.setContentText("Please enter a time in 24 hour format of HH:MM.");
+                alert.showAndWait();
+                return;
+                }
                 endLDT = LocalDateTime.of(date, start).plus(duration, ChronoUnit.HOURS).plus(-offset, ChronoUnit.HOURS);
             } else {
             end = calendarTableView.getSelectionModel().getSelectedItem().getEnd();
             endLDT = LocalDateTime.of(date, end).plus(-offset, ChronoUnit.HOURS);
             }
         } else {
-            duration = Integer.parseInt(durationField.getText());
+            if(durationField.getText().matches("[\\d]")){
+                duration = Integer.parseInt(durationField.getText());
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Data Entry Error");
+                alert.setContentText("Duration must be a whole number under 10.");
+                alert.showAndWait();
+                return;
+            }
             endLDT = LocalDateTime.of(date, start).plus(duration, ChronoUnit.HOURS).plus(-offset,ChronoUnit.HOURS);
         }
 
@@ -247,8 +275,26 @@ public class CalendarController implements Initializable {
         try
         {
             date = datePicker.getValue();
-            start = LocalTime.parse(startField.getText(), timeFormatter);
-            duration = Integer.parseInt(durationField.getText());
+            if(startField.getText().matches("(([0-1][0-9]):([0-5][0-9]))|(([2][0-3]):([0-5][0-9]))")){
+                start = LocalTime.parse(startField.getText(), timeFormatter);
+            } else if(startField.getText().matches("(([0-9]):([0-5][0-9]))")){
+                start = LocalTime.parse(("0" + startField.getText()), timeFormatter);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Data Entry Error");
+                alert.setContentText("Please enter a time in 24 hour format of HH:MM.");
+                alert.showAndWait();
+                return;
+            }
+            if(durationField.getText().matches("[\\d]")){
+                duration = Integer.parseInt(durationField.getText());
+            } else {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Data Entry Error");
+                alert.setContentText("Duration must be a whole number under 10.");
+                alert.showAndWait();
+                return;
+            }
             end = start.plus(duration, ChronoUnit.HOURS);
             
             startLDT = LocalDateTime.of(date, start).plus(-offset,ChronoUnit.HOURS);
