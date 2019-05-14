@@ -38,14 +38,16 @@
       <TextField fx:id="titleField" layoutX="15.0" layoutY="452.0" prefHeight="26.0" prefWidth="198.0" promptText="Appointment type" />
       <TextField fx:id="locationField" layoutX="15.0" layoutY="488.0" prefHeight="26.0" prefWidth="198.0" promptText="Location" />
       <Button layoutX="74.0" layoutY="560.0" mnemonicParsing="false" onAction="#addButtonPushed" text="Add New Appointment" />
-      <VBox layoutX="621.0" layoutY="458.0" prefHeight="109.0" prefWidth="150.0" spacing="15.0">
+      <VBox layoutX="621.0" layoutY="461.0" prefHeight="123.0" prefWidth="150.0" spacing="15.0">
          <children>
             <RadioButton fx:id="allRB" mnemonicParsing="false" onAction="#allRadioButtonSelected" text="View All" />
             <RadioButton fx:id="weekRB" mnemonicParsing="false" onAction="#weekRadioButtonSelected" text="View Next Week" />
             <RadioButton fx:id="monthRB" mnemonicParsing="false" onAction="#monthRadioButtonSelected" text="View Next Month" />
-            <Button mnemonicParsing="false" onAction="#viewCustomerButtonPushed" prefHeight="26.0" prefWidth="150.0" text="View Customer" />
+            <Button mnemonicParsing="false" onAction="#viewCustomerButtonPushed" prefHeight="12.0" prefWidth="150.0" text="View Customer" />
          </children>
       </VBox>
-      <Button layoutX="499.0" layoutY="557.0" mnemonicParsing="false" onAction="#reportsButtonPushed" text="View Reports" />
+      <Button layoutX="499.0" layoutY="560.0" mnemonicParsing="false" onAction="#reportsButtonPushed" text="View Reports" />
+      <TextField fx:id="searchField" layoutX="400.0" layoutY="524.0" prefHeight="26.0" prefWidth="198.0" promptText="Search" />
+      <Button layoutX="401.0" layoutY="560.0" mnemonicParsing="false" onAction="#searchButtonPushed" prefHeight="26.0" prefWidth="90.0" text="Search" />
    </children>
 </AnchorPane>

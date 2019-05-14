@@ -31,5 +31,7 @@
       <Button layoutX="84.0" layoutY="570.0" mnemonicParsing="false" onAction="#addButtonPushed" text="Add New Customer" />
       <Button layoutX="637.0" layoutY="462.0" mnemonicParsing="false" onAction="#viewAllCustomersButtonPushed" text="View All Customers" />
       <Button layoutX="638.0" layoutY="570.0" mnemonicParsing="false" onAction="#returnToCalendarButtonPushed" text="Return to Calendar" />
+      <Button layoutX="563.0" layoutY="570.0" mnemonicParsing="false" onAction="#searchButtonPushed" text="Search" />
+      <TextField fx:id="searchField" layoutX="370.0" layoutY="570.0" promptText="Search" />
    </children>
 </AnchorPane>

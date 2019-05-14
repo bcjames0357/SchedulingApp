@@ -47,6 +47,7 @@ public class CustomerManagementController implements Initializable {
     @FXML private TextField nameField;
     @FXML private TextField addressField;
     @FXML private TextField phoneField;
+    @FXML private TextField searchField;
     
     private Integer id;
     private String name;
@@ -271,6 +272,32 @@ public class CustomerManagementController implements Initializable {
         populateCustomers();
     }
     
+    public void searchButtonPushed(ActionEvent event) {
+        if(searchField.getText().trim().isEmpty()){
+            customerTableView.getItems().clear();
+            return;
+        }
+        String searchString = searchField.getText().trim();
+        try{
+            String sql = "SELECT customer.customerId, customer.customerName, "
+                    + "address.address, address.phone, address.addressId "
+                    + "FROM customer "
+                    + "JOIN address "
+                    + "ON customer.addressId = address.addressId "
+                    + "WHERE "
+                    + "INSTR(customer.customerId, '" + searchString + "') "
+                    + "OR INSTR(customer.customerName, '" + searchString + "') "
+                    + "OR INSTR(address.address, '" + searchString + "') "
+                    + "OR INSTR(address.phone, '" + searchString + "') "
+                    + "OR INSTR(address.addressId, '" + searchString + "') ";
+            
+            ResultSet rs = DBConnection.conn.createStatement().executeQuery(sql);
+            populateCustomers(rs);
+        } catch(SQLException e) {
+            System.err.println(e);
+        }
+    }
+    
     public void populateCustomers() {
         viewAll = true;
         customerTableView.getItems().clear();
@@ -284,6 +311,31 @@ public class CustomerManagementController implements Initializable {
             
             ResultSet rs = DBConnection.conn.createStatement().executeQuery(sql);
             
+            while(rs.next()){
+                Customer customer = new Customer();
+                customer.setID(rs.getInt("customerId"));
+                customer.setName(rs.getString("customerName"));
+                customer.setAddress(rs.getString("address"));
+                customer.setPhone(rs.getString("phone"));
+                customer.setAddressID(rs.getInt("addressId"));
+                customers.add(customer);
+            }
+            customerTableView.setItems(customers);
+        } catch (SQLException e) {
+            System.err.print(e);
+        }
+        
+        idCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getID()).asObject());
+        nameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
+        addressCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getAddress()));
+        phoneCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPhone()));
+    }
+    
+    public void populateCustomers(ResultSet rs) {
+        viewAll = true;
+        customerTableView.getItems().clear();
+        
+        try {
             while(rs.next()){
                 Customer customer = new Customer();
                 customer.setID(rs.getInt("customerId"));

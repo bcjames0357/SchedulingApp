@@ -66,6 +66,7 @@ public class CalendarController implements Initializable {
     @FXML private TextField startField; 
     @FXML private TextField durationField;
     @FXML private TextField customerField;
+    @FXML private TextField searchField;
     @FXML private DatePicker datePicker;
     
     @FXML private RadioButton allRB;
@@ -119,6 +120,38 @@ public class CalendarController implements Initializable {
         toggleGroup.selectToggle(allRB);
         
         populateCalendar();
+    }
+    
+    public void searchButtonPushed(ActionEvent event) 
+    {
+        if(searchField.getText().trim().isEmpty()){
+            calendarTableView.getItems().clear();
+            return;
+        }
+        try{
+        String searchString = searchField.getText().trim();
+        String sql = "SELECT * FROM appointment WHERE "
+                + "INSTR(appointmentId, '" + searchString + "') > 0 "
+                + "OR INSTR(customerId, '" + searchString + "') > 0 "
+                + "OR INSTR(title, '" + searchString + "') > 0 "
+                + "OR INSTR(description, '" + searchString + "') > 0 "
+                + "OR INSTR(location, '" + searchString + "') > 0 "
+                + "OR INSTR( contact, '" + searchString + "') > 0 "
+                + "OR INSTR(url, '" + searchString + "') > 0 "
+                + "OR INSTR(start, '" + searchString + "') > 0 "
+                + "OR INSTR(end, '" + searchString + "') > 0 "
+                + "OR INSTR(createdBy, '" + searchString + "') > 0 "
+                + "OR INSTR(lastUpdate, '" + searchString + "') > 0 "
+                + "OR INSTR(lastUpdateBy, '" + searchString + "') > 0 "
+                + "OR INSTR(type, '" + searchString + "') > 0 "
+                + "OR INSTR(userId, '" + searchString + "') > 0 ";
+
+        ResultSet rs = DBConnection.conn.createStatement().executeQuery(sql);
+        populateCalendar(rs);
+        } catch(SQLException e) {
+            System.err.println(e);
+        }
+        
     }
     
     /**
@@ -402,6 +435,58 @@ public class CalendarController implements Initializable {
             String sql = "SELECT appointmentId, title, location, start, end, customerId FROM appointment";
             ResultSet rs = DBConnection.conn.createStatement().executeQuery(sql);
             
+            while(rs.next()){
+                Appointment appt = new Appointment();
+                LocalDateTime ldtStart = LocalDateTime.parse(rs.getString("start"), formatter).plus(offset, ChronoUnit.HOURS);
+                date = ldtStart.toLocalDate();
+                LocalTime ltStart= (LocalDateTime.parse(rs.getString("start"), formatter).toLocalTime()).plus(offset, ChronoUnit.HOURS);
+                LocalTime ltEnd = (LocalDateTime.parse(rs.getString("end"), formatter).toLocalTime()).plus(offset, ChronoUnit.HOURS);
+                
+                appt.setID(rs.getInt("appointmentId"));
+                appt.setTitle(rs.getString("title"));
+                appt.setLocation(rs.getString("location"));
+                appt.setDate(date);
+                appt.setStart(ltStart);
+                appt.setEnd(ltEnd);
+                appt.setCustomer(rs.getInt("customerId"));
+                
+                dateArray.add(date);
+                startArray.add(ltStart);
+                endArray.add(ltEnd);
+                idArray.add(appt.getID());
+                
+                appointments.add(appt);
+            }
+            calendarTableView.setItems(appointments);
+        } catch (SQLException ex) {
+            System.err.print(ex);
+        }
+     
+        // This lambda expression was used to improve the readability of the code
+        // as well as to decrease overall .JAR file size by avoiding additional 
+        // .CLASS files from inner classes.
+        idCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getID()).asObject());
+
+        // This lambda expression was used to improve the readability of the code
+        // as well as to decrease overall .JAR file size by avoiding additional 
+        // .CLASS files from inner classes.
+        titleCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getTitle()));
+        locationCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLocation()));
+        dateCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalDate>("date"));
+        startCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalTime>("start"));
+        endCol.setCellValueFactory(new PropertyValueFactory<Appointment, LocalTime>("end"));
+        customerCol.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getCustomer()).asObject());
+    
+    }
+    
+    public void populateCalendar(ResultSet rs) {
+        calendarTableView.getItems().clear();
+        dateArray.clear();
+        startArray.clear();
+        endArray.clear();
+        idArray.clear();
+        
+        try {
             while(rs.next()){
                 Appointment appt = new Appointment();
                 LocalDateTime ldtStart = LocalDateTime.parse(rs.getString("start"), formatter).plus(offset, ChronoUnit.HOURS);

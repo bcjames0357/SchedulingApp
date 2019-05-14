@@ -19,7 +19,7 @@ public class DBConnection {
     private static final String USERNAME = "U05aBh";
     private static final String PASSWORD = "53688447769";
     private static final String DRIVER = "com.mysql.jdbc.Driver";
-
+   
     public static Connection conn;
     
     public static Connection getConnection() throws SQLException

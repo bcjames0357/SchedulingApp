@@ -9,6 +9,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -32,6 +35,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 /**
  * FXML Controller class
@@ -71,43 +76,65 @@ public class LogInController implements Initializable {
             System.err.println(e); 
         }
         String sql = 
-                "SELECT userName, password, userId "
+                "SELECT userName, password, salt, userId "
                 + "FROM user "
-                + "WHERE userName = \"" + un_string 
-                + "\" AND password = \"" + pw_string + "\"";
+                + "WHERE userName = \"" + un_string + "\"";
         ResultSet rs;
         
         try {
             rs = DBConnection.conn.createStatement().executeQuery(sql);
             if(rs.next())
             {
-                userID = rs.getInt("userId");
-                String log = "successful login";
-                LocalDateTime ts = LocalDateTime.now();
-                logEvent(ts, log, un_string);
-                appointmentSoon();
-                
-                FXMLLoader loader = new FXMLLoader();
-                loader.setLocation(SchedulingApp.class.getResource("Calendar.fxml"));
-                Parent root = loader.load();
-                Scene scene = new Scene(root);
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.setScene(scene);
-                stage.show();
-                
+                byte[] hashPass = getEncryptedPassword(pw_string, rs.getBytes("salt"), 20*1000, 256);
+                if(validatePassword(hashPass, rs.getBytes("password"))){
+                    userID = rs.getInt("userId");
+                    String log = "successful login";
+                    LocalDateTime ts = LocalDateTime.now();
+                    logEvent(ts, log, un_string);
+                    appointmentSoon();
+                    
+                    FXMLLoader loader = new FXMLLoader();
+                    loader.setLocation(SchedulingApp.class.getResource("Calendar.fxml"));
+                    Parent root = loader.load();
+                    Scene scene = new Scene(root);
+                    Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                    stage.setScene(scene);
+                    stage.show();
+                } else {
+                    failedLogin();                                      
+                }
             } else {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle(alertTitle);
-                alert.setContentText(alertText);
-                alert.showAndWait();
+                failedLogin();
             }
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             throw new LoginException(e);
-        } catch (IOException e) {
-            throw new LogFileException(e);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException ex) {
+            Logger.getLogger(LogInController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public boolean validatePassword(byte[] hashPass, byte[] dbPass) {
+        if(hashPass == null || dbPass == null)
+            return false;
+        
+        for (int i = 0; i < hashPass.length && i < dbPass.length; i++)
+        {
+            //found a non-match, exit the loop
+            if (!(hashPass[i] == dbPass[i]))
+                return false;
+        }
+        return true;
+    }
 
+    public void failedLogin() throws IOException {
+        String log = "failed login attempt";
+        LocalDateTime ts = LocalDateTime.now();
+        logEvent(ts, log, un_string);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(alertTitle);
+        alert.setContentText(alertText);
+        alert.showAndWait();  
+    }
     /**
      * Initializes the controller class.
      */
@@ -162,32 +189,33 @@ public class LogInController implements Initializable {
      public void logEvent(LocalDateTime time, String event, String user)throws IOException{
 
         if(_eventWriter == null)
-
             _eventWriter = new BufferedWriter(new FileWriter(_file, true));
-
-        
-
-        try {
-
+        try 
+        {
             _eventWriter.write(time + "|  " + event + " -> " + user + " ");
-
             _eventWriter.newLine();
-
-        } 
-
-        catch(IOException ex){
-
-            //Logger.getLogger(EventLogger.class.getName()).log(Level.SEVERE, null, ex);
-
-        } 
-
-        finally{
-
-          if (_eventWriter != null) 
-
-            _eventWriter.close();
-
         }
-
+        catch(IOException ex){
+            //Logger.getLogger(EventLogger.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        finally{
+          if (_eventWriter != null)
+            _eventWriter.close();
+        }
+    }
+     public static byte[] getEncryptedPassword(
+                                         String password,
+                                         byte[] salt,
+                                         int iterations,
+                                         int derivedKeyLength
+                                         ) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeySpec spec = new PBEKeySpec(
+                                 password.toCharArray(),
+                                 salt,
+                                 iterations,
+                                 derivedKeyLength * 8
+                                 );
+        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        return f.generateSecret(spec).getEncoded();
     }
 }
