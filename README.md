@@ -1,5 +1,5 @@
 # SchedulingApp
-A scheduling desktop user interface created for the Software II - Advanced Java Concepts course at Western Governors University.
+A scheduling desktop user interface created for the Software II - Advanced Java Concepts course at Western Governors University. Additional features have been added for the software development capstone project. 
 
 
 Scenario
@@ -65,3 +65,28 @@ I.   Provide the ability to generate each  of the following reports:
 
 
 J.   Provide the ability to track user activity by recording timestamps for user log-ins in a .txt file. Each new record should be appended to the log file, if the file already exists.
+
+
+Additional capstone project requirements:
+
+A.   Design and develop a fully functional software application that addresses your identified business problem or organizational need. Include each  of the following attributes as they are the minimum required elements  for the application:
+
+●  one of the following application types: mobile, web, or stand-alone application
+
+●  code including inheritance, polymorphism, and encapsulation
+
+●  search functionality with multiple row results and displays
+
+●  a database component with the functionality to securely add, modify, and delete the data
+
+●  ability to generate reports with multiple columns, multiple rows, date-time stamp, and title
+
+●  exception controls
+
+●  validation functionality
+
+●  industry appropriate security features
+
+●  design elements that make the application scalable
+
+●  a user-friendly, functional GUI
