@@ -94,15 +94,23 @@ public class ReportsController implements Initializable {
         try{
             sql = "SELECT DISTINCT contact FROM appointment";
             rs = DBConnection.conn.createStatement().executeQuery(sql);
+            String cons = "";
             while(rs.next())
             {
-                consultants.getItems().add(rs.getString("contact"));
+                cons = rs.getString("contact").toLowerCase();
+                cons = Character.toString(cons.charAt(0)).toUpperCase() 
+                        + cons.substring(1,cons.length());
+                System.out.println(cons);
+                consultants.getItems().add(cons);
             }
             
             consultants.showingProperty().addListener((obs, wasShowing, isNowShowing) -> 
             {
-                consultants.getSelectionModel().getSelectedItem();
-                populateCalendar(consultants.getSelectionModel().getSelectedItem());
+                try{
+                    consultants.getSelectionModel().getSelectedItem();
+                    populateCalendar(consultants.getSelectionModel().getSelectedItem());
+                } catch(NullPointerException e) {} // Ignore click if no item selected
+
             });
         } catch (SQLException e) {
             System.err.println(e);
@@ -164,7 +172,7 @@ public class ReportsController implements Initializable {
                 appt.setEnd(ltEnd);
                 appt.setCustomer(rs.getInt("customerId"));
                 
-                if(rs.getString("contact").equals(user))
+                if(rs.getString("contact").toLowerCase().equals(user.toLowerCase()))
                 {
                     appointments.add(appt);
                 }

@@ -62,7 +62,6 @@ public class LogInController implements Initializable {
     public void submitButtonPushed(ActionEvent event) throws LoginException, LogFileException
     {
         try {
-            
             un_string = username.getText();
             pw_string = password.getText();
             if(username.getText().trim().isEmpty() || password.getText().trim().isEmpty()) {
@@ -186,7 +185,7 @@ public class LogInController implements Initializable {
         }
     }
     
-     public void logEvent(LocalDateTime time, String event, String user)throws IOException{
+     public void logEvent(LocalDateTime time, String event, String user) throws IOException {
 
         if(_eventWriter == null)
             _eventWriter = new BufferedWriter(new FileWriter(_file, true));
@@ -196,7 +195,7 @@ public class LogInController implements Initializable {
             _eventWriter.newLine();
         }
         catch(IOException ex){
-            //Logger.getLogger(EventLogger.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println(ex);
         }
         finally{
           if (_eventWriter != null)

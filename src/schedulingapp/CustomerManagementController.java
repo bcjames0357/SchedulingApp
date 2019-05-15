@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +27,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -161,21 +163,31 @@ public class CustomerManagementController implements Initializable {
         if(customerTableView.getSelectionModel().isEmpty()){
             return;
         }
-        
+        Statement stmt = null;
+        Alert alert;
         try {
-            Integer removeId = customerTableView.getSelectionModel().getSelectedItem().getID();
-            String update = "DELETE FROM customer WHERE customerId = " + removeId;
-            Statement stmt = DBConnection.conn.createStatement();
-            stmt.executeUpdate(update);
+            alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirm Delete");
+            alert.setHeaderText("Delete selected appointment.");
+            alert.setContentText("Are you sure? This action cannot be undone.");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == ButtonType.OK){
+                Integer removeId = customerTableView.getSelectionModel().getSelectedItem().getID();
+                String update = "DELETE FROM customer WHERE customerId = " + removeId;
+                stmt = DBConnection.conn.createStatement();
+                stmt.executeUpdate(update);
+            }
         } catch (SQLIntegrityConstraintViolationException ex) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Customer deletion error!");
-            alert.setContentText("A customer with existing appointments cannot be deleted.");
-            alert.showAndWait();
+                alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Customer deletion error!");
+                alert.setContentText("A customer with existing appointments cannot be deleted.");
+                alert.showAndWait();
         } catch (SQLException ex) {
             System.err.println(ex);
         }
         populateCustomers();
+
     }
     
     public void saveButtonPushed() {

@@ -19,6 +19,7 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
 import java.util.logging.Level;
@@ -35,6 +36,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
@@ -289,18 +292,28 @@ public class CalendarController implements Initializable {
 
     public void deleteButtonPushed(ActionEvent event)
     {
+        if(calendarTableView.getSelectionModel().isEmpty())
+            return;
         Statement stmt = null;
-        try {
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Delete");
+        alert.setHeaderText("Delete selected customer.");
+        alert.setContentText("Are you sure? This action cannot be undone.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK){
+            try {
             Integer removeId = calendarTableView.getSelectionModel().getSelectedItem().getID();
             String update = "DELETE FROM appointment WHERE appointmentId = " + removeId;
             stmt = DBConnection.conn.createStatement();
             stmt.executeUpdate(update);
-        } catch (SQLException ex) {
+            } catch (SQLException ex) {
             System.err.print(ex);
-        } catch (NullPointerException ex) {
+            } catch (NullPointerException ex) {
             System.err.println(ex);
-        }
+            }
         populateCalendar();
+        }        
     }
     
     public void addButtonPushed(ActionEvent event)

@@ -96,7 +96,6 @@ public class RegionalReportsController implements Initializable {
         }
     }
     
-    
     public void monthlyRadioButtonSelected(ActionEvent event) {
         try{
             FXMLLoader loader = new FXMLLoader();
@@ -123,8 +122,10 @@ public class RegionalReportsController implements Initializable {
             
             locations.showingProperty().addListener((obs, wasShowing, isNowShowing) -> 
             {
+                try{
                 locations.getSelectionModel().getSelectedItem();
                 populateCalendar(locations.getSelectionModel().getSelectedItem());
+                } catch (NullPointerException e) {} //Ignore click if no item selected
             });
         } catch (SQLException e) {
             System.err.println(e);

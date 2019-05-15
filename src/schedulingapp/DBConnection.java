@@ -18,7 +18,7 @@ public class DBConnection {
     private static final String DB_URL = "jdbc:mysql://52.206.157.109/" + DB_NAME;
     private static final String USERNAME = "U05aBh";
     private static final String PASSWORD = "53688447769";
-    private static final String DRIVER = "com.mysql.jdbc.Driver";
+    //private static final String DRIVER = "com.mysql.jdbc.Driver";
    
     public static Connection conn;
     
@@ -29,7 +29,7 @@ public class DBConnection {
     
     public static void makeConnection() throws ClassNotFoundException, SQLException, Exception
     {
-        Class.forName(DRIVER);
+        //Class.forName(DRIVER);
         conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
         System.out.println("Connection successful.");
     }

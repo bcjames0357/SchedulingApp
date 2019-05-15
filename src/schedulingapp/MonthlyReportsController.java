@@ -98,8 +98,10 @@ public class MonthlyReportsController implements Initializable {
             }
             months.showingProperty().addListener((obs, wasShowing, isNowShowing) -> 
             {
-                months.getSelectionModel().getSelectedItem();
-                populateCalendar(months.getSelectionModel().getSelectedItem());
+                try{
+                    months.getSelectionModel().getSelectedItem();
+                    populateCalendar(months.getSelectionModel().getSelectedItem());
+                } catch (NullPointerException e){} // Ignore click if no item selected
             });
         } catch (SQLException e) {
             System.err.println(e);
